@@ -3,14 +3,15 @@ from dash import dcc, html, dash_table
 import pandas as pd
 import plotly.express as px
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+px.set_mapbox_access_token(open(".mapbox_token").read())
 # Load your data into a Pandas dataframe
 df = pd.read_csv("https://raw.githubusercontent.com/MitchStares/Spatial-Analysis-in-R/master/Euc_sieberii_illawarra.csv")
 df = df.loc[:,['Latitude','Longitude','Scientific Name - original', 'Local Government Areas 2011']]
 # Create a Mapbox map
 map_figure = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", zoom=6)
-map_figure.update_layout(mapbox_style="open-street-map", 
+map_figure.update_layout(mapbox_style="streets", 
                          margin=dict(t=0, b=0, l=0, r=0),
                          autosize = True,
                          hovermode = 'closest')
@@ -27,7 +28,8 @@ data_table = dash_table.DataTable(
     style_cell={"width": "100px"},
     style_table={"overflowX": "scroll"},
     page_current=0,
-    page_size=10
+    page_size=10, 
+    export_format = 'csv'
 )
 
 @app.callback(
