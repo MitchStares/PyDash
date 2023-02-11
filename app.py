@@ -99,15 +99,15 @@ app.layout = html.Div(style={
         "height": "100vh"
     },children=[
     html.Div(style={
-                "width": "50vw",
+                "width": "70vw",
                 "height": "100vh",
                 "padding": "0"
             },children=[
-        dcc.Graph(id="map", figure=map_figure, config={"displayModeBar":True,"displaylogo":False, 'modeBarButtonsToRemove':['zoomIn','zoomOut','resetViewMapbox','toImage']}),
+        dcc.Graph(id="map", figure=map_figure, style={'height': '100%'},  config={"displayModeBar":True,"displaylogo":False, 'modeBarButtonsToRemove':['zoomIn','zoomOut','resetViewMapbox','toImage']}),
         dcc.Store(id="map_data", data=df.to_dict("records"))
     ]),
     html.Div(style={
-                "width": "50vw",
+                "width": "30vw",
                 "height": "100vh",
                 "overflowY": "auto",
                 "padding": "0"
