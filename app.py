@@ -2,19 +2,48 @@ import dash
 from dash import dcc, html, dash_table
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import json
+import requests
+import pyproj
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 px.set_mapbox_access_token(open(".mapbox_token").read())
 # Load your data into a Pandas dataframe
 df = pd.read_csv("https://raw.githubusercontent.com/MitchStares/Spatial-Analysis-in-R/master/Euc_sieberii_illawarra.csv")
+url = "https://raw.githubusercontent.com/MitchStares/PyDash/master/assets/illawarraPCT.geojson"
+
+# retrieve GeoJSON data from URL
+response = requests.get(url)
+geojson = response.json()
+
+
 df = df.loc[:,['Latitude','Longitude','Scientific Name - original', 'Local Government Areas 2011']]
+# convert DataFrame to EPSG::4283 (CRS of geojson)
+in_proj = pyproj.Proj(proj='latlong', datum='WGS84')
+out_proj = pyproj.Proj(geojson['crs']['properties']['name'])
+df['x'], df['y'] = pyproj.transform(in_proj, out_proj,
+                                     df['Longitude'].tolist(), df['Latitude'].tolist())
 # Create a Mapbox map
-map_figure = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", zoom=6)
+map_figure = px.scatter_mapbox(df, lat="x", lon="y", zoom=6)
 map_figure.update_layout(mapbox_style="streets", 
                          margin=dict(t=0, b=0, l=0, r=0),
                          autosize = True,
                          hovermode = 'closest')
+# extract values from GeoJSON properties
+locations = [i for i, feature in enumerate(geojson['features'])]
+z = [feature['properties']['MapUnitNa'] for feature in geojson['features']]
+
+
+
+# add choropleth mapbox to the same figure
+map_figure.add_trace(go.Choroplethmapbox(geojson=geojson,
+                                   locations=locations,
+                                   z=z,
+                                   colorscale='Viridis',
+                                   featureidkey='properties.MapUnitNa',
+                                   colorbar=dict(title='Colorbar Title')))
 
 # Define the data table
 data_table = dash_table.DataTable(
